@@ -22,7 +22,8 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
         public float CharacterSize { get; set; }
         public float ObstacleSize { get; set; }
         public float ObstacleWeight { get; set; }
-        public float IgnoreDistance { get; set; }
+        public float IgnoreCharDistance { get; set; }
+        public float IgnoreObsDistance { get; set; }
         public float MaxSpeed { get; set; }
         public float NumSamples { get; set; }
         public float CharWeight { get; set; }
@@ -85,7 +86,7 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
                     {
 
                         Vector3 deltaP = b.Position - Character.Position;
-                        if (deltaP.magnitude > IgnoreDistance) //we can safely ignore this character
+                        if (deltaP.magnitude > IgnoreCharDistance) //we can safely ignore this character
                             continue;
                         //test the collision of the ray λ(pA,2vA’-vA-vB) with the circle
                         Vector3 rayVector = 2 * sample - Character.velocity - b.velocity;
@@ -106,13 +107,12 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
                     Vector3 deltaP = b.transform.position - Character.Position;
                     //test the collision of the ray λ(pA,2vA’-vA-vB) with the circle
                     //Vector3 rayVector = sample;
-                    Vector3 rayVector = 2 * sample - Character.velocity;
                     RaycastHit hit;
                     float timePenalty = 0;
 
                     //float tc = MathHelper.TimeToCollisionBetweenRayAndCircle(Character.Position, rayVector, b.GetComponent<Collider>().ClosestPoint(Character.Position), ObstacleSize + CharacterSize);
-                    bool collided = b.GetComponent<Collider>().Raycast(new Ray(Character.Position, rayVector.normalized), out hit, IgnoreDistance);
-                    float tc = collided ? ((hit.point - Character.Position).magnitude - CharacterSize) / rayVector.magnitude : -1;
+                    bool collided = b.GetComponent<Collider>().Raycast(new Ray(Character.Position, sample.normalized), out hit, IgnoreObsDistance);
+                    float tc = collided ? (Vector3.Distance(hit.point, Character.Position) - CharacterSize) / MaxSpeed : -1;
                     if (tc > 0) //future collision
                         timePenalty = ObstacleWeight / tc;
                     else if (tc == 0) //immediate collision

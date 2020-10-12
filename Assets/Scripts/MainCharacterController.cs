@@ -11,19 +11,20 @@ using Assets.Scripts.IAJ.Unity.Movement;
 public class MainCharacterController : MonoBehaviour
 {
 
-    public const float X_WORLD_SIZE = 56;
-    public const float Z_WORLD_SIZE = 56;
+    public const float X_WORLD_SIZE = 45;
+    public const float Z_WORLD_SIZE = 45;
     private float MAX_ACCELERATION = 80;
     private float MAX_SPEED = 20;
     private float DRAG = 0.01f;
     private float MAX_LOOK_AHEAD = 10.0f;
     private float MAX_TIME_LOOK_AHEAD = 1f;
     private float AVOID_MARGIN = 15.0f;
-    private float IGNORE_DISTANCE = 50.0f;
+    private float IGNORE_CHAR_DISTANCE = 15.0f;
+    private float IGNORE_OBS_DISTANCE = 20.0f;
     private float CHARACTER_SIZE = 2f;
     private int NUM_SAMPLES = 200;
-    private float CHAR_WEIGHT = 3f;
-    private float OBSTACLE_WEIGHT = 10f;
+    private float CHAR_WEIGHT = 20f;
+    private float OBSTACLE_WEIGHT = 20f;
     private float OBSTACLE_SIZE = 3f;
 
     public GameObject movementText;
@@ -126,7 +127,8 @@ public class MainCharacterController : MonoBehaviour
             Character = this.character.KinematicData,
             MaxAcceleration = MAX_ACCELERATION,
             MaxSpeed = MAX_SPEED,
-            IgnoreDistance = IGNORE_DISTANCE,
+            IgnoreCharDistance = IGNORE_CHAR_DISTANCE,
+            IgnoreObsDistance = IGNORE_OBS_DISTANCE,
             DebugColor = Color.black,
             NumSamples = NUM_SAMPLES,
             CharWeight = CHAR_WEIGHT,
@@ -197,7 +199,8 @@ public class MainCharacterController : MonoBehaviour
             Character = this.character.KinematicData,
             MaxAcceleration = MAX_ACCELERATION,
             MaxSpeed = MAX_SPEED,
-            IgnoreDistance = IGNORE_DISTANCE,
+            IgnoreCharDistance = IGNORE_CHAR_DISTANCE,
+            IgnoreObsDistance = IGNORE_OBS_DISTANCE,
             DebugColor = Color.black,
             NumSamples = NUM_SAMPLES,
             CharWeight = CHAR_WEIGHT,
