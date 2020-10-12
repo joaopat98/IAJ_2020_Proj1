@@ -16,15 +16,16 @@ public class MainCharacterController : MonoBehaviour
     private float MAX_ACCELERATION = 80;
     private float MAX_SPEED = 20;
     private float DRAG = 0.01f;
-    private float MAX_LOOK_AHEAD = 10.0f;
+    private float MAX_LOOK_AHEAD = 9.0f;
     private float MAX_TIME_LOOK_AHEAD = 1f;
-    private float AVOID_MARGIN = 15.0f;
-    private float IGNORE_CHAR_DISTANCE = 15.0f;
+    private float AVOID_MARGIN = 7.0f;
+    private float COLLISION_RADIUS = 3.0f;
+    private float IGNORE_CHAR_DISTANCE = 14.0f;
     private float IGNORE_OBS_DISTANCE = 20.0f;
     private float CHARACTER_SIZE = 2f;
     private int NUM_SAMPLES = 200;
-    private float CHAR_WEIGHT = 20f;
-    private float OBSTACLE_WEIGHT = 20f;
+    private float CHAR_WEIGHT = 10f;
+    private float OBSTACLE_WEIGHT = 50f;
     private float OBSTACLE_SIZE = 3f;
 
     public GameObject movementText;
@@ -105,7 +106,7 @@ public class MainCharacterController : MonoBehaviour
                         Character = this.character.KinematicData,
                         MaxAcceleration = MAX_ACCELERATION,
                         DebugColor = Color.cyan,
-                        AvoidMargin = AVOID_MARGIN,
+                        CollisionRadius = COLLISION_RADIUS,
                         MaxTimeLookAhead = MAX_TIME_LOOK_AHEAD
                     };
 
@@ -186,7 +187,7 @@ public class MainCharacterController : MonoBehaviour
                         Character = this.character.KinematicData,
                         MaxAcceleration = MAX_ACCELERATION,
                         DebugColor = Color.cyan,
-                        AvoidMargin = AVOID_MARGIN,
+                        CollisionRadius = COLLISION_RADIUS,
                         MaxTimeLookAhead = MAX_TIME_LOOK_AHEAD
                     };
 

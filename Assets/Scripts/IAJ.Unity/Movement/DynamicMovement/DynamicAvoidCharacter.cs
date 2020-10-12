@@ -10,7 +10,7 @@ namespace Assets.Scripts.IAJ.Unity.Movement.DynamicMovement
         }
 
         public float MaxTimeLookAhead { get; set; }
-        public float AvoidMargin { get; set; }
+        public float CollisionRadius { get; set; }
 
 
         public DynamicAvoidCharacter(KinematicData Target)
@@ -27,17 +27,16 @@ namespace Assets.Scripts.IAJ.Unity.Movement.DynamicMovement
             var deltaVel = Target.velocity - Character.velocity;
             var deltaSqrSpeed = deltaVel.sqrMagnitude;
 
-            if (deltaSqrSpeed == 0) return new MovementOutput();
+            if (Mathf.Abs(deltaSqrSpeed - 0) <= 0.01) return new MovementOutput();
 
             var timeToClosest = -Vector3.Dot(deltaPos, deltaVel) / deltaSqrSpeed;
-            Debug.Log(timeToClosest);
             if (timeToClosest > MaxTimeLookAhead) return new MovementOutput();
             //for efficiency reasons I use the deltas instead of Character and Target
             var futureDeltaPos = deltaPos + deltaVel * timeToClosest;
             var futureDistance = futureDeltaPos.magnitude;
 
-            if (futureDistance > 2 * AvoidMargin) return new MovementOutput();
-            if (futureDistance <= 0 || deltaPos.magnitude < 2 * AvoidMargin)
+            if (futureDistance > 2 * CollisionRadius) return new MovementOutput();
+            if (futureDistance <= 0 || deltaPos.magnitude < 2 * CollisionRadius)
                 //deals with exact or immediate collisions
                 Output.linear = Character.Position - Target.Position;
             else

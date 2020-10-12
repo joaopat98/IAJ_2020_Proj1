@@ -62,10 +62,7 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
             }
             //3) evaluate and get best sample
             base.Target.velocity = GetBestSample(desiredVelocity, samples);
-            foreach (var b in Obstacles)
-            {
-                var point = b.GetComponent<Collider>().ClosestPoint(Character.Position);
-            }
+            Debug.DrawRay(base.Character.Position, base.Target.velocity);
             //4) let the base class take care of achieving the final velocity
             return base.GetMovement();
 
@@ -91,13 +88,11 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
                         //test the collision of the ray λ(pA,2vA’-vA-vB) with the circle
                         Vector3 rayVector = 2 * sample - Character.velocity - b.velocity;
                         float tc = MathHelper.TimeToCollisionBetweenRayAndCircle(Character.Position, rayVector, b.Position, CharacterSize * 2);
-                        float timePenalty;
+                        float timePenalty = 0;
                         if (tc > 0) //future collision
                             timePenalty = CharWeight / tc;
                         else if (tc == 0) //immediate collision
                             timePenalty = Mathf.Infinity;
-                        else //no collision
-                            timePenalty = 0;
                         if (timePenalty > maximumTimePenalty) //opportunity for optimization here
                             maximumTimePenalty = timePenalty;
                     }
