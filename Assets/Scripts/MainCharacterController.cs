@@ -22,10 +22,10 @@ public class MainCharacterController : MonoBehaviour
     private float COLLISION_RADIUS = 3.0f;
     private float IGNORE_CHAR_DISTANCE = 14.0f;
     private float IGNORE_OBS_DISTANCE = 20.0f;
-    private float CHARACTER_SIZE = 2f;
-    private int NUM_SAMPLES = 200;
-    private float CHAR_WEIGHT = 10f;
-    private float OBSTACLE_WEIGHT = 50f;
+    private float CHARACTER_SIZE = 3f;
+    private int NUM_SAMPLES = 100;
+    private float CHAR_WEIGHT = 20f;
+    private float OBSTACLE_WEIGHT = 30f;
     private float OBSTACLE_SIZE = 3f;
 
     public GameObject movementText;

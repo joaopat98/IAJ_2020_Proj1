@@ -92,88 +92,42 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
                         if (tc > 0) //future collision
                             timePenalty = CharWeight / tc;
                         else if (tc == 0) //immediate collision
+                        {
                             timePenalty = Mathf.Infinity;
+                            maximumTimePenalty = timePenalty;
+                            break;
+                        }
                         if (timePenalty > maximumTimePenalty) //opportunity for optimization here
                             maximumTimePenalty = timePenalty;
                     }
                 }
-                foreach (var b in Obstacles)
+                if (maximumTimePenalty != Mathf.Infinity)
                 {
-                    Vector3 deltaP = b.transform.position - Character.Position;
-                    //test the collision of the ray λ(pA,2vA’-vA-vB) with the circle
-                    //Vector3 rayVector = sample;
-                    RaycastHit hit;
-                    float timePenalty = 0;
-
-                    //float tc = MathHelper.TimeToCollisionBetweenRayAndCircle(Character.Position, rayVector, b.GetComponent<Collider>().ClosestPoint(Character.Position), ObstacleSize + CharacterSize);
-                    bool collided = b.GetComponent<Collider>().Raycast(new Ray(Character.Position, sample.normalized), out hit, IgnoreObsDistance);
-                    float tc = collided ? (Vector3.Distance(hit.point, Character.Position) - CharacterSize) / MaxSpeed : -1;
-                    if (tc > 0) //future collision
-                        timePenalty = ObstacleWeight / tc;
-                    else if (tc == 0) //immediate collision
-                        timePenalty = Mathf.Infinity;
-                    if (timePenalty > maximumTimePenalty) //opportunity for optimization here
-                        maximumTimePenalty = timePenalty;
-                    /*
-                    var spcol = b.GetComponent<SphereCollider>();
-                    if (spcol != null)
+                    foreach (var b in Obstacles)
                     {
-                        float tc = MathHelper.TimeToCollisionBetweenRayAndCircle(Character.Position, rayVector, b.transform.position, spcol.radius + CharacterSize);
-                        //bool collided = spcol.Raycast(new Ray(Character.Position, rayVector.normalized), out hit, rayVector.magnitude);
-                        //float tc = collided ? (hit.point - Character.Position).magnitude / rayVector.magnitude : -1;
-                        if (tc > 0) //future collision
-                            timePenalty = AvoidWeight / tc;
-                        else if (tc == 0) //immediate collision
-                            timePenalty = Mathf.Infinity;
-                        if (timePenalty > maximumTimePenalty) //opportunity for optimization here
-                            maximumTimePenalty = timePenalty;
-                    }
-                    else
-                    {
-                        var boxCol = b.GetComponent<BoxCollider>();
-                        if (boxCol != null)
+                        Vector3 deltaP = b.transform.position - Character.Position;
+                        //test the collision of the ray λ(pA,2vA’-vA-vB) with the circle
+                        //Vector3 rayVector = sample;
+                        RaycastHit hit;
+                        float timePenalty = 0;
+                        if (sample.sqrMagnitude != 0)
                         {
-                            var dims = boxCol.size;
-                            dims.Scale(b.transform.localScale);
-                            Vector3[] centers;
-                            float circRadius;
-                            if (dims.x > dims.z)
+                            //float tc = MathHelper.TimeToCollisionBetweenRayAndCircle(Character.Position, rayVector, b.GetComponent<Collider>().ClosestPoint(Character.Position), ObstacleSize + CharacterSize);
+                            bool collided = b.GetComponent<Collider>().Raycast(new Ray(Character.Position, sample.normalized), out hit, IgnoreObsDistance);
+                            float dist = collided ? Vector3.Distance(hit.point, Character.Position) : Mathf.Infinity;
+                            float tc = collided ? (dist - CharacterSize) / MaxSpeed : -1;
+                            if (tc > 0) //future collision
+                                timePenalty = ObstacleWeight / tc;
+                            else if (dist <= CharacterSize) //immediate collision
                             {
-                                circRadius = dims.z / 2;
-                                int numCircs = Mathf.FloorToInt(dims.x / circRadius) - 1;
-                                centers = new Vector3[numCircs];
-                                for (int i = 0; i < numCircs; i++)
-                                {
-                                    centers[i] = b.transform.position + b.transform.right * (circRadius + ((dims.x - 2 * circRadius) / numCircs) * i - (dims.x / 2));
-                                }
+                                timePenalty = Mathf.Infinity;
+                                maximumTimePenalty = timePenalty;
+                                break;
                             }
-                            else
-                            {
-                                circRadius = dims.x / 2;
-                                int numCircs = Mathf.FloorToInt(dims.z / circRadius) - 1;
-                                centers = new Vector3[numCircs];
-                                for (int i = 0; i < numCircs; i++)
-                                {
-                                    centers[i] = b.transform.position + b.transform.forward * (circRadius + ((dims.z - 2 * circRadius) / numCircs) * i - (dims.z / 2));
-                                }
-                            }
-                            foreach (var center in centers)
-                            {
-                                Debug.DrawLine(center - Vector3.forward * circRadius, center + Vector3.forward * circRadius);
-                                Debug.DrawLine(center - Vector3.right * circRadius, center + Vector3.right * circRadius);
-                                float tc = MathHelper.TimeToCollisionBetweenRayAndCircle(Character.Position, rayVector, center, circRadius + CharacterSize);
-                                //bool collided = spcol.Raycast(new Ray(Character.Position, rayVector.normalized), out hit, rayVector.magnitude);
-                                //float tc = collided ? (hit.point - Character.Position).magnitude / rayVector.magnitude : -1;
-                                if (tc > 0) //future collision
-                                    timePenalty = AvoidWeight / tc;
-                                else if (tc == 0) //immediate collision
-                                    timePenalty = Mathf.Infinity;
-                                if (timePenalty > maximumTimePenalty) //opportunity for optimization here
-                                    maximumTimePenalty = timePenalty;
-                            }
+                            if (timePenalty > maximumTimePenalty) //opportunity for optimization here
+                                maximumTimePenalty = timePenalty;
                         }
                     }
-                    */
                 }
                 float penalty = distancePenalty + maximumTimePenalty;
                 //opportunity for optimization here
