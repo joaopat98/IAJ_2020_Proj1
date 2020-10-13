@@ -25,8 +25,9 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
         public float IgnoreCharDistance { get; set; }
         public float IgnoreObsDistance { get; set; }
         public float MaxSpeed { get; set; }
-        public float NumSamples { get; set; }
+        public int NumSamples { get; set; }
         public float CharWeight { get; set; }
+        private Collider[] colliders;
 
         protected DynamicMovement.DynamicMovement DesiredMovement { get; set; }
 
@@ -36,101 +37,102 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
             base.Target = new KinematicData();
             Characters = movingCharacters;
             Obstacles = obs;
+            //Cache obstacle colliders on initialization
+            colliders = Obstacles.Select(o => o.GetComponent<Collider>()).ToArray();
         }
 
         public override MovementOutput GetMovement()
         {
             var desiredMovementOutput = this.DesiredMovement.GetMovement();
-            //if movementOutput is acceleration we need to convert it to velocity
             var desiredVelocity = Character.velocity + desiredMovementOutput.linear;
-            //trim velocity if bigger than max
             if (desiredVelocity.magnitude > MaxSpeed)
             {
                 desiredVelocity.Normalize();
                 desiredVelocity *= MaxSpeed;
             }
-            //2) generate samples
-            //always consider the desired velocity as a sample
-            var samples = new List<Vector3>();
-            samples.Add(desiredVelocity);
-            for (int i = 0; i < NumSamples; i++)
+            var samples = new Vector3[NumSamples];
+            samples[0] = desiredVelocity;
+            for (int i = 1; i < NumSamples; i++)
             {
-                float angle = Random.value * 2 * Mathf.PI; //random angle between 0 and 2PI
-                float magnitude = Random.value * MaxSpeed; // random magnitude between 0 and maxSpeed
+                float angle = Random.value * 2 * Mathf.PI;
+                float magnitude = Random.value * MaxSpeed;
                 Vector3 velocitySample = MathHelper.ConvertOrientationToVector(angle) * magnitude;
-                samples.Add(velocitySample);
+                samples[i] = velocitySample;
             }
-            //3) evaluate and get best sample
             base.Target.velocity = GetBestSample(desiredVelocity, samples);
             Debug.DrawRay(base.Character.Position, base.Target.velocity);
-            //4) let the base class take care of achieving the final velocity
             return base.GetMovement();
 
         }
 
-        Vector3 GetBestSample(Vector3 desiredVelocity, List<Vector3> samples)
+        Vector3 GetBestSample(Vector3 desiredVelocity, Vector3[] samples)
         {
-            Vector3 bestSample = Vector3.zero; //default velocity if all samples suck
+            var charPos = Character.Position;
+            Vector3 bestSample = Vector3.zero;
             float minimumPenalty = Mathf.Infinity;
             foreach (var sample in samples)
             {
-                //penalty based on the distance to desired velocity
                 float distancePenalty = (desiredVelocity - sample).magnitude;
                 float maximumTimePenalty = 0;
+
                 foreach (var b in Characters)
                 {
                     if (b != Character)
                     {
+                        var otherPos = b.Position;
 
-                        Vector3 deltaP = b.Position - Character.Position;
-                        if (deltaP.magnitude > IgnoreCharDistance) //we can safely ignore this character
+                        Vector3 deltaP = otherPos - charPos;
+                        if (deltaP.magnitude > IgnoreCharDistance)
                             continue;
-                        //test the collision of the ray λ(pA,2vA’-vA-vB) with the circle
                         Vector3 rayVector = 2 * sample - Character.velocity - b.velocity;
-                        float tc = MathHelper.TimeToCollisionBetweenRayAndCircle(Character.Position, rayVector, b.Position, CharacterSize * 2);
+                        float tc = MathHelper.TimeToCollisionBetweenRayAndCircle(charPos, rayVector, otherPos, CharacterSize * 2);
                         float timePenalty = 0;
-                        if (tc > 0) //future collision
+                        if (tc > 0.0001)
                             timePenalty = CharWeight / tc;
-                        else if (tc == 0) //immediate collision
+                        else if (tc >= 0)
                         {
                             timePenalty = Mathf.Infinity;
                             maximumTimePenalty = timePenalty;
                             break;
                         }
-                        if (timePenalty > maximumTimePenalty) //opportunity for optimization here
+                        if (timePenalty > maximumTimePenalty)
                             maximumTimePenalty = timePenalty;
                     }
                 }
                 if (maximumTimePenalty != Mathf.Infinity)
                 {
-                    foreach (var b in Obstacles)
+                    var sampleRay = new Ray(charPos, sample.normalized);
+                    RaycastHit hit;
+                    foreach (var b in colliders)
                     {
-                        Vector3 deltaP = b.transform.position - Character.Position;
-                        //test the collision of the ray λ(pA,2vA’-vA-vB) with the circle
-                        //Vector3 rayVector = sample;
-                        RaycastHit hit;
                         float timePenalty = 0;
                         if (sample.sqrMagnitude != 0)
                         {
-                            //float tc = MathHelper.TimeToCollisionBetweenRayAndCircle(Character.Position, rayVector, b.GetComponent<Collider>().ClosestPoint(Character.Position), ObstacleSize + CharacterSize);
-                            bool collided = b.GetComponent<Collider>().Raycast(new Ray(Character.Position, sample.normalized), out hit, IgnoreObsDistance);
-                            float dist = collided ? Vector3.Distance(hit.point, Character.Position) : Mathf.Infinity;
+                            // Cast a ray from the character to each obstacle's collider
+                            // Calculate the time to collision by dividing the distance from the character to the collision point by the velocity's magnitude
+                            bool collided = b.Raycast(sampleRay, out hit, IgnoreObsDistance);
+                            float dist = collided ? Vector3.Distance(hit.point, charPos) : Mathf.Infinity;
                             float tc = collided ? (dist - CharacterSize) / MaxSpeed : -1;
-                            if (tc > 0) //future collision
+                            if (tc > 0)
                                 timePenalty = ObstacleWeight / tc;
-                            else if (dist <= CharacterSize) //immediate collision
+                            else if (dist <= CharacterSize)
                             {
                                 timePenalty = Mathf.Infinity;
                                 maximumTimePenalty = timePenalty;
                                 break;
                             }
-                            if (timePenalty > maximumTimePenalty) //opportunity for optimization here
+                            if (timePenalty > maximumTimePenalty)
                                 maximumTimePenalty = timePenalty;
                         }
                     }
                 }
                 float penalty = distancePenalty + maximumTimePenalty;
-                //opportunity for optimization here
+                if (penalty < 0.001)
+                {
+                    minimumPenalty = penalty;
+                    bestSample = sample;
+                    break;
+                }
                 if (penalty < minimumPenalty)
                 {
                     minimumPenalty = penalty;

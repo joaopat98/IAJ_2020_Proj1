@@ -24,8 +24,8 @@ public class MainCharacterController : MonoBehaviour
     private float IGNORE_OBS_DISTANCE = 20.0f;
     private float CHARACTER_SIZE = 3f;
     private int NUM_SAMPLES = 100;
-    private float CHAR_WEIGHT = 20f;
-    private float OBSTACLE_WEIGHT = 30f;
+    private float CHAR_WEIGHT = 80f;
+    private float OBSTACLE_WEIGHT = 120f;
     private float OBSTACLE_SIZE = 3f;
 
     public GameObject movementText;

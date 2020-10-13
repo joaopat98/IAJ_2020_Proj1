@@ -43,9 +43,12 @@ namespace Assets.Scripts.IAJ.Unity.Movement.DynamicMovement
             var ray_front = new Ray(Character.Position, Character.velocity.normalized);
             var ray_left = new Ray(Character.Position, MathHelper.Rotate2D(Character.velocity, FanAngle).normalized);
             var ray_right = new Ray(Character.Position, MathHelper.Rotate2D(Character.velocity, -FanAngle).normalized);
-            AddTarget(ref numHits, ref acumTarget, ray_front, MaxLookAhead);
-            AddTarget(ref numHits, ref acumTarget, ray_left, MaxLookAhead * 2 / 3);
-            AddTarget(ref numHits, ref acumTarget, ray_right, MaxLookAhead * 2 / 3);
+            if (Character.velocity.sqrMagnitude != 0)
+            {
+                AddTarget(ref numHits, ref acumTarget, ray_front, MaxLookAhead);
+                AddTarget(ref numHits, ref acumTarget, ray_left, MaxLookAhead * 2 / 3);
+                AddTarget(ref numHits, ref acumTarget, ray_right, MaxLookAhead * 2 / 3);
+            }
 
 
             Debug.DrawRay(ray_front.origin, ray_front.direction * MaxLookAhead);
